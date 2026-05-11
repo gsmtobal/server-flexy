@@ -29,6 +29,17 @@ if (fs.existsSync(KEY_PATH)) {
 
 // --- API Endpoints ---
 
+// Friendly Root Page
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family: sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #696cff;">Tobal Gsm Server is Running! ✅</h1>
+            <p>The server is active and ready to sync with your modems.</p>
+            <p>Go back to your <a href="https://gsmtobal.github.io/server-flexy/sim_dashboard.html">Dashboard</a> to see real data.</p>
+        </div>
+    `);
+});
+
 // 1. Sync data from a HiLink Modem (like 192.168.50.1)
 app.get('/api/sync-hilink/:ip', async (req, res) => {
     const modemIp = req.params.ip;

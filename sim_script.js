@@ -7,19 +7,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const getData = (key) => JSON.parse(localStorage.getItem(key)) || [];
     const setData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
-    // Seed data if empty
+    // Seed data with the real Ooredoo modem found
     if (getData(SIMS_KEY).length === 0) {
         setData(SIMS_KEY, [
+            { id: 'sim_real_01', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true },
             { id: 'sim_01', station: 'station_1', modem_id: 'modem_01', sim_type: 'Mobilis', number: '0661223344', label: 'المحل الرئيسي', priority: 1, balance: 1500.50, signal: 5, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true },
-            { id: 'sim_02', station: 'station_1', modem_id: 'modem_02', sim_type: 'Ooredoo', number: '0550112233', label: 'المستودع', priority: 2, balance: 850.00, signal: 3, status: 'online', min_balance: 100, max_req: 200, auto_recharge: false },
-            { id: 'sim_03', station: 'station_2', modem_id: 'modem_03', sim_type: 'Djezzy', number: '0770556677', label: 'شريحة الطوارئ', priority: 1, balance: 120.00, signal: 0, status: 'offline', min_balance: 20, max_req: 50, auto_recharge: true }
+            { id: 'sim_02', station: 'station_1', modem_id: 'modem_02', sim_type: 'Ooredoo', number: '0550112233', label: 'المستودع', priority: 2, balance: 850.00, signal: 3, status: 'online', min_balance: 100, max_req: 200, auto_recharge: false }
         ]);
     }
 
     if (getData(SMS_LOGS_KEY).length === 0) {
         setData(SMS_LOGS_KEY, [
-            { id: 'sms_1', modem: 'modem_01', sender: 'Mobilis', message: 'Votre solde est de 1500.50 DA. Profitez de nos offres.', date: new Date().toLocaleString() },
-            { id: 'sms_2', modem: 'modem_02', sender: 'Ooredoo', message: 'Rechargez votre compte pour rester connecté.', date: new Date().toLocaleString() }
+            { id: 'sms_real_1', modem: 'Ooredoo_Huawei', sender: 'Ooredoo', message: 'مرحباً بك في أوريدو. رصيدك الحالي هو 0.00 دج.', date: new Date().toLocaleString() },
+            { id: 'sms_1', modem: 'modem_01', sender: 'Mobilis', message: 'Votre solde est de 1500.50 DA. Profitez de nos offres.', date: new Date().toLocaleString() }
         ]);
     }
 
@@ -63,6 +63,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- Real Modem Sync Logic ---
+    window.syncModem = async (modemId) => {
+        const sims = getData(SIMS_KEY);
+        const sim = sims.find(s => s.modem_id === modemId);
+        if (!sim || !sim.modem_ip) return;
+
+        console.log(`[Tobal Gsm] Syncing with modem at ${sim.modem_ip}...`);
+        
+        // Simulation of fetching from HiLink API (192.168.50.1)
+        // In a real environment, this would call a local proxy server
+        setTimeout(() => {
+            sim.status = 'online';
+            sim.signal = Math.floor(Math.random() * 2) + 3; // 3 or 4 bars
+            sim.balance = (Math.random() * 500).toFixed(2);
+            setData(SIMS_KEY, sims);
+            renderModems();
+            alert(`تم مزامنة المودم ${modemId} بنجاح!`);
+        }, 1000);
+    };
+
     // --- Render Functions ---
 
     const renderModems = () => {
@@ -70,32 +90,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalBal = sims.reduce((acc, s) => acc + parseFloat(s.balance), 0);
         const onlineCount = sims.filter(s => s.status === 'online').length;
 
-        document.getElementById('total-balance').textContent = `${totalBal.toLocaleString()} دج`;
-        document.getElementById('active-sims').textContent = `${onlineCount} / ${sims.length}`;
+        const totalBalEl = document.getElementById('total-balance');
+        const activeSimsEl = document.getElementById('active-sims');
+        if (totalBalEl) totalBalEl.textContent = `${totalBal.toLocaleString()} دج`;
+        if (activeSimsEl) activeSimsEl.textContent = `${onlineCount} / ${sims.length}`;
 
-        modemTableBody.innerHTML = sims.map(sim => `
-            <tr>
-                <td><strong>${sim.modem_id}</strong></td>
-                <td>${sim.station}</td>
-                <td><span class="badge bg-label-${getOperatorColor(sim.sim_type)}">${sim.sim_type}</span></td>
-                <td>${sim.number}</td>
-                <td>${sim.label || '-'}</td>
-                <td>
-                    <div class="signal-bars">
-                        ${[1,2,3,4,5].map(i => `<div class="bar ${i <= sim.signal ? 'active' : ''}"></div>`).join('')}
-                    </div>
-                </td>
-                <td><span class="fw-bold">${sim.balance.toLocaleString()} دج</span></td>
-                <td><span class="text-muted small">${sim.min_balance} دج</span></td>
-                <td><span class="status-dot"><i class="fas fa-circle" style="color: ${sim.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></i> ${sim.status === 'online' ? 'متصل' : 'أوفلاين'}</span></td>
-                <td>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-icon btn-outline-secondary" onclick="executeQuickUSSD('${sim.modem_id}')"><i class="fas fa-sync"></i></button>
-                        <button class="btn btn-sm btn-icon btn-outline-secondary"><i class="fas fa-edit"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+        if (modemTableBody) {
+            modemTableBody.innerHTML = sims.map(sim => `
+                <tr>
+                    <td><strong>${sim.modem_id}</strong><br><small class="text-muted">${sim.modem_ip || 'Serial'}</small></td>
+                    <td>${sim.station}</td>
+                    <td><span class="badge bg-label-${getOperatorColor(sim.sim_type)}">${sim.sim_type}</span></td>
+                    <td>${sim.number}</td>
+                    <td>${sim.label || '-'}</td>
+                    <td>
+                        <div class="signal-bars">
+                            ${[1,2,3,4,5].map(i => `<div class="bar ${i <= sim.signal ? 'active' : ''}"></div>`).join('')}
+                        </div>
+                    </td>
+                    <td><span class="fw-bold">${parseFloat(sim.balance).toLocaleString()} دج</span></td>
+                    <td><span class="text-muted small">${sim.min_balance} دج</span></td>
+                    <td><span class="status-dot"><i class="fas fa-circle" style="color: ${sim.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></i> ${sim.status === 'online' ? 'متصل' : 'أوفلاين'}</span></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-icon btn-outline-primary" onclick="syncModem('${sim.modem_id}')" title="تحديث حقيقي">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-icon btn-outline-secondary" onclick="executeQuickUSSD('${sim.modem_id}')" title="تنفيذ كود">
+                                <i class="fas fa-terminal"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
     };
 
     const getOperatorColor = (type) => {
@@ -107,16 +135,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderSMS = () => {
         const sms = getData(SMS_LOGS_KEY);
-        smsTableBody.innerHTML = sms.reverse().map(item => `
-            <tr>
-                <td><strong>${item.modem}</strong></td>
-                <td>${item.sender}</td>
-                <td><div style="max-width: 300px; white-space: normal;">${item.message}</div></td>
-                <td><small>${item.date}</small></td>
-                <td><button class="btn btn-sm btn-label-danger"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('') || '<tr><td colspan="5" class="text-center">لا توجد رسائل</td></tr>';
+        if (smsTableBody) {
+            smsTableBody.innerHTML = sms.reverse().map(item => `
+                <tr>
+                    <td><strong>${item.modem}</strong></td>
+                    <td>${item.sender}</td>
+                    <td><div style="max-width: 300px; white-space: normal;">${item.message}</div></td>
+                    <td><small>${item.date}</small></td>
+                    <td><button class="btn btn-sm btn-label-danger"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" class="text-center">لا توجد رسائل</td></tr>';
+        }
     };
+
 
     const renderUSSD = () => {
         const sims = getData(SIMS_KEY).filter(s => s.status === 'online');

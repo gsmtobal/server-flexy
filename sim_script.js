@@ -190,11 +190,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- USSD Execution ---
+    const ussdCodeInput = document.getElementById('ussd-code');
+    
     ussdForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const modemId = ussdModemSelect.value;
-        const code = document.getElementById('ussd-code').value;
+        let code = ussdCodeInput.value;
         if (!modemId || !code) return;
+
+        const sims = getData(SIMS_KEY);
+        const sim = sims.find(s => s.modem_id === modemId);
+        
+        // Replace PIN placeholder if exists
+        if (code.includes('PIN')) {
+            code = code.replace('PIN', (sim && sim.pin) ? sim.pin : '0000');
+        }
 
         executeUSSD(modemId, code);
     });
@@ -206,7 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.executeQuickUSSD = (modemId) => {
-        executeUSSD(modemId, '*100#');
+        const sims = getData(SIMS_KEY);
+        const sim = sims.find(s => s.modem_id === modemId);
+        let code = "*200*PIN#"; // Default Ooredoo check
+        if (code.includes('PIN')) {
+            code = code.replace('PIN', (sim && sim.pin) ? sim.pin : '0000');
+        }
+        executeUSSD(modemId, code);
     };
 
     const executeUSSD = (modemId, code) => {
@@ -215,9 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resultItem.innerHTML = `جاري تنفيذ الكود ${code} على المودم ${modemId}...`;
         ussdResults.prepend(resultItem);
 
-        // Simulate Network Latency
+        // Simulate Network Latency or Call Local Server
         setTimeout(() => {
-            const response = `تمت العملية بنجاح. الرصيد: ${(Math.random() * 1000).toFixed(2)} دج`;
+            const response = `تمت العملية بنجاح. الرد: تم استقبال طلبك للكود ${code}`;
             resultItem.className = 'alert alert-success mb-2 p-2';
             resultItem.innerHTML = `
                 <div class="d-flex justify-content-between"><small class="fw-bold">${modemId}</small> <small>${new Date().toLocaleTimeString()}</small></div>
@@ -228,17 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const logs = getData(USSD_LOGS_KEY);
             logs.push({ modem: modemId, code, response, time: new Date().toLocaleString() });
             setData(USSD_LOGS_KEY, logs);
-
-            // Update balance if it was a balance check
-            if (code.includes('100') || code.includes('710') || code.includes('133')) {
-                const sims = getData(SIMS_KEY);
-                const sim = sims.find(s => s.modem_id === modemId);
-                if (sim) {
-                    sim.balance = parseFloat((Math.random() * 1000).toFixed(2));
-                    setData(SIMS_KEY, sims);
-                    if (document.getElementById('modem-info').classList.contains('active')) renderModems();
-                }
-            }
         }, 1500);
     };
 

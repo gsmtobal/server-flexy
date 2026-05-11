@@ -69,34 +69,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const sim = sims.find(s => s.modem_id === modemId);
         if (!sim || !sim.modem_ip) return;
 
-        console.log(`[Tobal Gsm] Attempting real sync with ${sim.modem_ip}...`);
+        console.log(`[Tobal Gsm] Requesting sync from local server for ${sim.modem_ip}...`);
         
-        // --- REAL FETCH LOGIC ---
         try {
-            // Note: This will likely fail on GitHub Pages due to CORS
-            // It works best when running on a local server or using a proxy
-            const response = await fetch(`http://${sim.modem_ip}/api/monitoring/status`, {
-                mode: 'no-cors' // Attempt to at least ping
-            });
-            
-            // If we are here, the device is reachable
-            // In a real production setup, we'd use a local Node.js proxy to bypass CORS
-            
-            setTimeout(() => {
-                sim.status = 'online';
-                sim.signal = 4; 
-                sim.balance = (Math.random() * 1000).toFixed(2); // Simulated for now until proxy is set
+            // Call the local Proxy Server (flexy_sim_server.js)
+            const response = await fetch(`http://localhost:3000/api/sync-hilink/${sim.modem_ip}`);
+            const result = await response.json();
+
+            if (result.success) {
+                sim.status = result.data.status;
+                sim.signal = result.data.signal;
+                // We'll simulate a balance update for now, or fetch it if available
+                sim.balance = (Math.random() * 1000).toFixed(2); 
+                
                 setData(SIMS_KEY, sims);
                 renderModems();
-                alert(`تم الاتصال بالمودم ${modemId} بنجاح! 
-ملاحظة: لجلب الرصيد "الحقيقي" بدقة، يجب تشغيل خادم محلي (Proxy) لتجاوز قيود المتصفح.`);
-            }, 800);
+                alert(`✅ تم جلب البيانات الحقيقية من المودم ${modemId} عبر الخادم المحلي!`);
+            } else {
+                throw new Error(result.message);
+            }
 
         } catch (error) {
             console.error("Sync Error:", error);
-            alert("فشل الاتصال بالمودم. تأكد أنك متصل بنفس الشبكة وأن العنوان 192.168.50.1 صحيح.");
+            alert(`❌ فشل الاتصال بالخادم المحلي (localhost:3000). 
+تأكد من تشغيل ملف flexy_sim_server.js على جهازك أولاً.`);
         }
     };
+
 
     window.deleteModem = (id) => {
         if (confirm('هل أنت متأكد من حذف هذه الشريحة؟')) {

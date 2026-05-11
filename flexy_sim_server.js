@@ -56,13 +56,19 @@ app.get('/api/sync-hilink/:ip', async (req, res) => {
             return match ? match[1] : null;
         };
 
-        const signal = getValue('SignalIcon') || 0;
+        // Try different signal tags (Huawei firmwares vary)
+        let signal = getValue('SignalIcon');
+        if (signal === null || signal === '0') {
+            const strength = getValue('SignalStrength');
+            if (strength) signal = Math.floor(parseInt(strength) / 20); // Map 0-100 to 0-5
+        }
+
         const networkType = getValue('CurrentNetworkType') || 'Unknown';
-        const serviceStatus = getValue('ServiceStatus'); // 2 means searching, 0 means service
+        const serviceStatus = getValue('ServiceStatus'); 
 
         const data = {
-            status: serviceStatus == '2' ? 'searching' : 'online',
-            signal: parseInt(signal),
+            status: (serviceStatus == '2' || signal == '0') ? 'offline' : 'online',
+            signal: Math.max(0, Math.min(5, parseInt(signal || 0))),
             carrier: networkType == '3' ? 'Ooredoo 3G' : 'Ooredoo 4G',
             last_update: new Date().toLocaleString()
         };

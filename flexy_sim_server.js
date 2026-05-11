@@ -52,16 +52,14 @@ app.get('/api/sync-hilink/:ip', async (req, res) => {
 
         // Simple XML Parser using Regex for HiLink
         const getValue = (tag) => {
-            const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`));
+            const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`, 'i')); // Case-insensitive
             return match ? match[1] : null;
         };
 
-        // Try different signal tags (Huawei firmwares vary)
-        let signal = getValue('SignalIcon');
-        if (signal === null || signal === '0') {
-            const strength = getValue('SignalStrength');
-            if (strength) signal = Math.floor(parseInt(strength) / 20); // Map 0-100 to 0-5
-        }
+        console.log(`[SIM Server] Raw Modem Response: ${xml.substring(0, 200)}...`);
+
+        // Try common signal tags
+        let signal = getValue('SignalIcon') || getValue('signalicon') || getValue('SignalStrength');
 
         const networkType = getValue('CurrentNetworkType') || 'Unknown';
         const serviceStatus = getValue('ServiceStatus'); 

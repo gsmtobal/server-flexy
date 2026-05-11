@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المودم | Tobal Gsm</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="sim_style.css">
+</head>
+<body>
+    <div class="layout-wrapper">
+        <!-- Sidebar -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+            <div class="app-brand demo">
+                <a href="index.html" class="app-brand-link">
+                    <span class="app-brand-logo demo">
+                        <img src="https://tobalflexy.com/logos/tobalflexy.png" alt="Logo" width="30">
+                    </span>
+                    <span class="app-brand-text demo menu-text fw-bolder ms-2">Tobal Gsm</span>
+                </a>
+            </div>
+
+            <div class="menu-inner-shadow"></div>
+
+            <ul class="menu-inner py-1">
+                <li class="menu-header small text-uppercase">
+                    <span class="menu-header-text">إدارة النظام</span>
+                </li>
+                <li class="menu-item active">
+                    <a href="#" class="menu-link" data-view="modem-info">
+                        <i class="menu-icon tf-icons fas fa-server"></i>
+                        <div>معلومات المودم</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-view="sms-inbox">
+                        <i class="menu-icon tf-icons fas fa-envelope"></i>
+                        <div>الرسائل الواردة</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-view="ussd-manager">
+                        <i class="menu-icon tf-icons fas fa-code"></i>
+                        <div>أوامر USSD</div>
+                    </a>
+                </li>
+                
+                <li class="menu-header small text-uppercase">
+                    <span class="menu-header-text">العمليات</span>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-view="consumption">
+                        <i class="menu-icon tf-icons fas fa-chart-line"></i>
+                        <div>سجل الاستهلاك</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-view="settings">
+                        <i class="menu-icon tf-icons fas fa-cog"></i>
+                        <div>إعدادات المودم</div>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <div class="layout-page">
+            <!-- Navbar -->
+            <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                    <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </div>
+
+                <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+                    <div class="navbar-nav align-items-center">
+                        <div class="nav-item d-flex align-items-center">
+                            <i class="fas fa-search fs-4 lh-0"></i>
+                            <input type="text" class="form-control border-0 shadow-none" placeholder="البحث..." aria-label="Search...">
+                        </div>
+                    </div>
+                    <ul class="navbar-nav flex-row align-items-center ms-auto">
+                        <li class="nav-item lh-1 me-3">
+                            <span class="badge bg-label-primary">متصل: 5 مودم</span>
+                        </li>
+                        <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                            <div class="avatar avatar-online">
+                                <img src="https://via.placeholder.com/150" alt class="w-px-40 h-auto rounded-circle">
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Content wrapper -->
+            <div class="content-wrapper">
+                <div class="container-xxl flex-grow-1 container-p-y">
+                    
+                    <!-- View: Modem Info -->
+                    <div id="modem-info" class="view-content active">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">الرئيسية /</span> معلومات المودم</h4>
+                            <button class="btn btn-primary" id="btn-add-modem">
+                                <i class="fas fa-plus me-1"></i> إضافة مودم جديد
+                            </button>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card card-stat">
+                                    <div class="card-body d-flex align-items-center">
+                                        <div class="badge bg-label-success p-3 me-3"><i class="fas fa-wallet fa-lg"></i></div>
+                                        <div>
+                                            <h5 class="card-title mb-0">إجمالي الرصيد</h5>
+                                            <small class="text-success fw-semibold" id="total-balance">0.00 دج</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-stat">
+                                    <div class="card-body d-flex align-items-center">
+                                        <div class="badge bg-label-info p-3 me-3"><i class="fas fa-sim-card fa-lg"></i></div>
+                                        <div>
+                                            <h5 class="card-title mb-0">الشرائح النشطة</h5>
+                                            <small class="text-info fw-semibold" id="active-sims">0 / 0</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-stat">
+                                    <div class="card-body d-flex align-items-center">
+                                        <div class="badge bg-label-warning p-3 me-3"><i class="fas fa-clock fa-lg"></i></div>
+                                        <div>
+                                            <h5 class="card-title mb-0">آخر تحديث</h5>
+                                            <small class="text-warning fw-semibold">الآن</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h5 class="card-header">قائمة أجهزة المودم</h5>
+                            <div class="table-responsive text-nowrap">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID المودم</th>
+                                            <th>المحطة</th>
+                                            <th>نوع الشريحة</th>
+                                            <th>الرقم</th>
+                                            <th>التسمية</th>
+                                            <th>الإشارة</th>
+                                            <th>الرصيد</th>
+                                            <th>الحد الأدنى</th>
+                                            <th>الحالة</th>
+                                            <th>إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modem-table-body">
+                                        <!-- Injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View: SMS Inbox -->
+                    <div id="sms-inbox" class="view-content">
+                        <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">الرئيسية /</span> الرسائل الواردة</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>المودم</th>
+                                                <th>المرسل</th>
+                                                <th>الرسالة</th>
+                                                <th>التاريخ</th>
+                                                <th>إجراء</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="sms-table-body">
+                                            <!-- Injected via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View: USSD Manager -->
+                    <div id="ussd-manager" class="view-content">
+                        <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">الرئيسية /</span> تنفيذ أوامر USSD</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">إرسال كود</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="ussd-form">
+                                            <div class="mb-3">
+                                                <label class="form-label">اختر المودم</label>
+                                                <select class="form-select" id="ussd-modem-select"></select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">الكود (USSD Code)</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="ussd-code" placeholder="*100#">
+                                                    <button class="btn btn-primary" type="submit">تنفيذ</button>
+                                                </div>
+                                            </div>
+                                            <div class="quick-ussd-buttons">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm me-1 mb-1" data-code="*100#">رصيد Mobilis</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm me-1 mb-1" data-code="*710#">رصيد Djezzy</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm me-1 mb-1" data-code="*133#">رصيد Ooredoo</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <h5 class="card-header">النتائج (Logs)</h5>
+                                    <div class="card-body overflow-auto" style="max-height: 400px;" id="ussd-results">
+                                        <div class="text-center text-muted py-5">لا توجد عمليات حالياً</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <footer class="content-footer footer bg-footer-theme">
+                    <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                        <div class="mb-2 mb-md-0">
+                            © 2026 Tobal Flexy
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
+
+    <!-- Add Modem Modal -->
+    <div class="modal fade" id="addModemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة مودم جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-modem-form">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Station (المحطة)</label>
+                                <input type="text" name="station" class="form-control" value="station_1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Modem ID</label>
+                                <input type="text" name="modem_id" class="form-control" required placeholder="modem_01">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">نوع الشريحة</label>
+                                <select name="sim_type" class="form-select">
+                                    <option value="Mobilis">Mobilis</option>
+                                    <option value="Djezzy">Djezzy</option>
+                                    <option value="Ooredoo">Ooredoo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الرقم</label>
+                                <input type="text" name="number" class="form-control" placeholder="0661223344">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">كود PIN</label>
+                                <input type="text" name="pin" class="form-control" value="0000">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">التسمية (Label)</label>
+                                <input type="text" name="label" class="form-control">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">الأولوية</label>
+                                <input type="number" name="priority" class="form-control" value="1">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">أقصى طلب (MaxReq)</label>
+                                <input type="number" name="max_req" class="form-control" value="100">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">أدنى رصيد (MinBalance)</label>
+                                <input type="number" name="min_balance" class="form-control" value="50">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">تعبئة تلقائية</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" name="auto_recharge" id="autoRecharge">
+                                    <label class="form-check-label" for="autoRecharge">تفعيل</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ المودم</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="sim_script.js"></script>
+</body>
+</html>

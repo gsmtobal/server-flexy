@@ -51,7 +51,9 @@
 
                 <div class="nav-group">
                     <span class="group-title">الإعدادات</span>
-                    <a href="#" class="nav-item" data-view="sim-view"><i class="fas fa-sim-card"></i> إدارة الشرائح</a>
+                    <a href="sim_dashboard.html" class="nav-item"><i class="fas fa-sim-card"></i> إدارة الشرائح (المتقدمة)</a>
+                    <a href="#" class="nav-item" data-view="sms-view"><i class="fas fa-envelope"></i> الرسائل SMS</a>
+                    <a href="#" class="nav-item" data-view="ussd-view"><i class="fas fa-terminal"></i> أوامر USSD</a>
                     <a href="#" class="nav-item" data-view="inventory-view"><i class="fas fa-boxes"></i> مخزون القسائم</a>
                 </div>
             </nav>
@@ -110,9 +112,9 @@
                             <i class="fas fa-ticket-alt" style="color: #71dd37;"></i>
                             <h3>بطاقات</h3>
                         </div>
-                        <div class="action-card" data-view="all-ops-view">
-                            <i class="fas fa-file-invoice" style="color: #ffab00;"></i>
-                            <h3>العمليات</h3>
+                        <div class="action-card" onclick="window.location.href='sim_dashboard.html'">
+                            <i class="fas fa-server" style="color: #696cff;"></i>
+                            <h3>إدارة المودم</h3>
                         </div>
                     </div>
                 </div>
@@ -189,11 +191,92 @@
             <!-- SIM Management View -->
             <div id="sim-view" class="view">
                 <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
-                    <h2>إدارة الشرائح</h2>
+                    <div class="header-main">
+                        <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
+                        <h2>إدارة الشرائح</h2>
+                    </div>
+                    <button class="btn-primary" id="open-add-sim-modal">
+                        <i class="fas fa-plus"></i> إضافة شريحة
+                    </button>
                 </div>
-                <div id="sim-list" class="sim-grid">
+
+                <div class="sim-stats-banner">
+                    <div class="stat-box">
+                        <span class="label">إجمالي الرصيد</span>
+                        <span class="value" id="total-sim-balance">0.00 دج</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">الشرائح المتصلة</span>
+                        <span class="value" id="active-sim-count">0 / 0</span>
+                    </div>
+                </div>
+
+                <div id="sim-list" class="sim-grid-enhanced">
                     <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <!-- SMS View -->
+            <div id="sms-view" class="view">
+                <div class="view-header">
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
+                    <h2>إدارة الرسائل SMS</h2>
+                </div>
+                <div class="sms-container">
+                    <div class="sms-sidebar">
+                        <div class="search-box-mini">
+                            <input type="text" placeholder="بحث عن شريحة...">
+                        </div>
+                        <div id="sms-sim-list" class="mini-list">
+                            <!-- List of SIMs to select for SMS -->
+                        </div>
+                    </div>
+                    <div class="sms-main">
+                        <div id="sms-messages" class="messages-area">
+                            <div class="empty-state">اختر شريحة لعرض الرسائل</div>
+                        </div>
+                        <div class="sms-input-area">
+                            <input type="text" id="sms-recipient" placeholder="رقم المستلم">
+                            <textarea id="sms-text" placeholder="اكتب رسالتك هنا..."></textarea>
+                            <button id="send-sms-btn" class="btn-primary">إرسال <i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USSD View -->
+            <div id="ussd-view" class="view">
+                <div class="view-header">
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
+                    <h2>أوامر USSD</h2>
+                </div>
+                <div class="ussd-container">
+                    <div class="ussd-form-card">
+                        <div class="input-group">
+                            <label>اختر الشريحة</label>
+                            <select id="ussd-sim-select" class="custom-select">
+                                <!-- Injected via JS -->
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>كود USSD</label>
+                            <div class="ussd-input-wrapper">
+                                <input type="text" id="ussd-code-input" placeholder="مثال: *100#">
+                                <button id="run-ussd-btn" class="btn-primary">تنفيذ</button>
+                            </div>
+                        </div>
+                        <div class="quick-codes">
+                            <button class="q-code" data-code="*100#">رصيد (Mobilis)</button>
+                            <button class="q-code" data-code="*710#">رصيد (Djezzy)</button>
+                            <button class="q-code" data-code="*133#">رصيد (Ooredoo)</button>
+                        </div>
+                    </div>
+                    <div class="ussd-history">
+                        <h3>سجل العمليات</h3>
+                        <div id="ussd-logs" class="logs-list">
+                            <!-- Logs injected via JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -246,6 +329,52 @@
 
         <!-- Overlay -->
         <div id="overlay" class="overlay"></div>
+
+        <!-- Add SIM Modal -->
+        <div id="add-sim-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>إضافة شريحة جديدة</h3>
+                    <button class="close-modal"><i class="fas fa-times"></i></button>
+                </div>
+                <form id="add-sim-form" class="modal-body">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>ID المودم</label>
+                            <input type="text" name="modem_id" required placeholder="مثال: modem_01">
+                        </div>
+                        <div class="input-group">
+                            <label>رقم الهاتف</label>
+                            <input type="tel" name="phone_number" required placeholder="06XXXXXXXX">
+                        </div>
+                        <div class="input-group">
+                            <label>نوع الشريحة</label>
+                            <select name="operator" class="custom-select">
+                                <option value="Mobilis">Mobilis</option>
+                                <option value="Djezzy">Djezzy</option>
+                                <option value="Ooredoo">Ooredoo</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>كود PIN</label>
+                            <input type="text" name="pin" value="0000">
+                        </div>
+                        <div class="input-group">
+                            <label>تسمية توضيحية</label>
+                            <input type="text" name="label" placeholder="مثال: شريحة المحل">
+                        </div>
+                        <div class="input-group">
+                            <label>الأولوية</label>
+                            <input type="number" name="priority" value="1" min="1" max="10">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary close-modal">إلغاء</button>
+                        <button type="submit" class="btn-primary">حفظ الشريحة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDKs -->

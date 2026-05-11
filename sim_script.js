@@ -22,8 +22,11 @@ window.syncModem = async (modemId) => {
             sim.signal = result.data.signal;
             sim.carrier = result.data.carrier;
             sim.last_sync = result.data.last_update;
-            // Update balance with some random value for now
-            sim.balance = (Math.random() * 1000).toFixed(2);
+            
+            // Only update balance if real data exists in the response
+            if (result.data.balance) {
+                sim.balance = result.data.balance;
+            }
             
             setData(SIMS_KEY, sims);
             if (typeof window.renderModems === 'function') window.renderModems();
@@ -36,7 +39,19 @@ window.syncModem = async (modemId) => {
     }
 };
 
-// 2. Delete Modem
+// 2. Reset/Delete Balance
+window.resetBalance = (modemId) => {
+    const sims = getData(SIMS_KEY);
+    const sim = sims.find(s => s.modem_id === modemId);
+    if (sim) {
+        sim.balance = 0;
+        setData(SIMS_KEY, sims);
+        window.renderModems();
+        alert('تم تصفير الرصيد بنجاح.');
+    }
+};
+
+// 3. Delete Modem
 window.deleteModem = (id) => {
     if (confirm('هل أنت متأكد من حذف هذه الشريحة؟')) {
         const sims = getData(SIMS_KEY).filter(s => s.id !== id);
@@ -99,7 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${[1,2,3,4,5].map(i => `<div class="bar ${i <= sim.signal ? 'active' : ''}"></div>`).join('')}
                         </div>
                     </td>
-                    <td><span class="fw-bold">${parseFloat(sim.balance || 0).toLocaleString()} دج</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="fw-bold">${parseFloat(sim.balance || 0).toLocaleString()} دج</span>
+                            <button class="btn btn-sm p-0 text-muted" onclick="resetBalance('${sim.modem_id}')" title="تصفير الرصيد">
+                                <i class="fas fa-eraser" style="font-size: 0.7rem;"></i>
+                            </button>
+                        </div>
+                    </td>
                     <td><span class="text-muted small">${sim.min_balance || 0} دج</span></td>
                     <td><span class="status-dot"><i class="fas fa-circle" style="color: ${sim.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></i> ${sim.status === 'online' ? 'متصل' : 'أوفلاين'}</span></td>
                     <td>

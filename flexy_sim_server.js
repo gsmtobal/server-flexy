@@ -43,32 +43,36 @@ app.get('/', (req, res) => {
 // 1. Sync data from a HiLink Modem (like 192.168.50.1)
 app.get('/api/sync-hilink/:ip', async (req, res) => {
     const modemIp = req.params.ip;
-    console.log(`[SIM Server] Syncing with HiLink Modem at ${modemIp}...`);
+    console.log(`[SIM Server] Fetching real data from ${modemIp}...`);
 
     try {
-        // Fetch Status (Signal, Network Type)
-        const statusResp = await axios.get(`http://${modemIp}/api/monitoring/status`, { timeout: 5000 });
-        
-        // Fetch SMS Count
-        const smsCountResp = await axios.get(`http://${modemIp}/api/sms/sms-count`, { timeout: 5000 });
+        // Fetch Monitoring Status
+        const statusResp = await axios.get(`http://${modemIp}/api/monitoring/status`, { timeout: 3000 });
+        const xml = statusResp.data;
 
-        // Note: In real Huawei API, these are XML responses. 
-        // For simplicity in this script, we assume the dashboard handles the parsing or we parse here.
-        // I'll return a clean JSON for the dashboard.
-        
+        // Simple XML Parser using Regex for HiLink
+        const getValue = (tag) => {
+            const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`));
+            return match ? match[1] : null;
+        };
+
+        const signal = getValue('SignalIcon') || 0;
+        const networkType = getValue('CurrentNetworkType') || 'Unknown';
+        const serviceStatus = getValue('ServiceStatus'); // 2 means searching, 0 means service
+
         const data = {
-            status: 'online',
-            signal: 4, // Parsed from statusResp
-            carrier: 'Ooredoo',
-            sms_count: 10,
+            status: serviceStatus == '2' ? 'searching' : 'online',
+            signal: parseInt(signal),
+            carrier: networkType == '3' ? 'Ooredoo 3G' : 'Ooredoo 4G',
             last_update: new Date().toLocaleString()
         };
 
+        console.log(`[SIM Server] Successfully parsed modem data: Signal=${data.signal}, Status=${data.status}`);
         res.json({ success: true, data });
 
     } catch (error) {
-        console.error(`[SIM Server] Error connecting to modem: ${error.message}`);
-        res.status(500).json({ success: false, message: "Could not reach modem" });
+        console.error(`[SIM Server] Error: ${error.message}`);
+        res.status(500).json({ success: false, message: "Modem unreachable or timed out" });
     }
 });
 

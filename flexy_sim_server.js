@@ -91,15 +91,45 @@ app.get('/api/sync-hilink/:ip', async (req, res) => {
     }
 });
 
-// 2. Execute USSD via Serial (Optional, if you have USB modems)
-app.post('/api/ussd', (req, res) => {
-    const { port, code } = req.body;
-    console.log(`[SIM Server] Executing USSD ${code} on ${port}...`);
-    // Serial port logic here if needed
-    res.json({ success: true, response: "Pending execution..." });
+// 2. Execute USSD via HiLink (New)
+app.post('/api/send-ussd', async (req, res) => {
+    const { ip, code } = req.body;
+    console.log(`[SIM Server] Sending USSD [${code}] to Modem at ${ip}...`);
+
+    try {
+        // Step 1: Get Session/Token
+        const sesTokResp = await axios.get(`http://${ip}/api/webserver/SesTokInfo`, { timeout: 3000 });
+        const sessionId = getXmlVal(sesTokResp.data, 'SesInfo');
+        const token = getXmlVal(sesTokResp.data, 'TokInfo');
+
+        // Step 2: Send USSD Command
+        const ussdXml = `<?xml version="1.0" encoding="UTF-8"?><request><content>${code}</content><codeType>CodeType</codeType><timeout></timeout></request>`;
+        
+        await axios.post(`http://${ip}/api/ussd/send`, ussdXml, {
+            headers: {
+                'Cookie': sessionId,
+                '__RequestVerificationToken': token,
+                'Content-Type': 'application/xml',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        console.log(`[SIM Server] USSD Command Sent Successfully! ✅`);
+        res.json({ success: true, message: "USSD Sent" });
+
+    } catch (error) {
+        console.error(`[SIM Server] USSD Error: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
-// 3. Get all modem statuses
+// Helper Function for all routes
+function getXmlVal(xml, tag) {
+    const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`, 'i'));
+    return match ? match[1] : null;
+}
+
+// 3. Execute USSD via Serial (Legacy)
 app.get('/api/status', async (req, res) => {
     if (!db) return res.status(500).send("Database not connected");
     const snapshot = await db.collection('sim_status').get();

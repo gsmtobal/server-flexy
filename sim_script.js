@@ -61,15 +61,35 @@ window.deleteModem = (id) => {
 };
 
 // 3. Execute Quick USSD
-window.executeQuickUSSD = (modemId) => {
+window.executeQuickUSSD = async (modemId) => {
     const sims = getData(SIMS_KEY);
     const sim = sims.find(s => s.modem_id === modemId);
+    if (!sim || !sim.modem_ip) return;
+
     let code = "*200*PIN#";
     if (sim && sim.pin) code = code.replace('PIN', sim.pin);
     else code = code.replace('PIN', '0000');
 
-    alert(`جاري إرسال الكود ${code} للمودم ${modemId}... (تحقق من شاشة السيرفر السوداء)`);
+    console.log(`[Tobal Gsm] Requesting USSD [${code}] for ${modemId}...`);
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/send-ussd`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip: sim.modem_ip, code: code })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            alert(`✅ تم إرسال طلب USSD (${code}) للمودم بنجاح! راقب شاشة السيرفر.`);
+        } else {
+            alert(`❌ فشل إرسال USSD: ${result.message}`);
+        }
+    } catch (error) {
+        alert(`❌ فشل الاتصال بالسيرفر المحلي. تأكد من تشغيل run_server.bat`);
+    }
 };
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // Seed data with the real Ooredoo modem found

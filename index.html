@@ -3,53 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | Tobal Scan</title>
+    <title>لوحة التحكم | Tobal Flexy</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <button id="close-sidebar" class="icon-btn"><i class="fas fa-times"></i></button>
+                <div class="sidebar-logo">
+                    <img src="https://tobalflexy.com/logos/tobalflexy.png" alt="Tobal Flexy">
+                    <span>Tobal Flexy</span>
+                </div>
+                <button id="close-sidebar" class="icon-btn d-lg-none"><i class="fas fa-times"></i></button>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active"><i class="fas fa-home"></i> الصفحة الرئيسية</a>
+                <a href="#" class="nav-item active" data-view="home-view"><i class="fas fa-home"></i> الصفحة الرئيسية</a>
                 
                 <div class="nav-group">
                     <span class="group-title">الخدمات</span>
-                    <a href="#" class="nav-item sub-item">فليكسي</a>
-                    <a href="#" class="nav-item sub-item">فليكسي جملة</a>
-                    <a href="#" class="nav-item sub-item">تعبئة ادوم</a>
+                    <a href="#" class="nav-item" data-view="flexy-view"><i class="fas fa-mobile-alt"></i> فليكسي</a>
+                    <a href="#" class="nav-item" data-view="bulk-flexy-view"><i class="fas fa-layer-group"></i> فليكسي جملة</a>
+                    <a href="#" class="nav-item" data-view="idoom-view"><i class="fas fa-wifi"></i> تعبئة ايدوم</a>
                 </div>
 
                 <div class="nav-group">
                     <span class="group-title">البطاقات</span>
-                    <a href="#" class="nav-item sub-item">طلبات البطاقات</a>
+                    <a href="#" class="nav-item" data-view="cards-view"><i class="fas fa-credit-card"></i> بطاقات</a>
+                    <a href="#" class="nav-item" data-view="card-orders-view"><i class="fas fa-shopping-cart"></i> طلبات البطاقات</a>
                 </div>
 
                 <div class="nav-group">
                     <span class="group-title">العمليات</span>
-                    <a href="#" class="nav-item sub-item">كل العمليات</a>
-                    <a href="#" class="nav-item sub-item">الاستهلاك</a>
-                    <a href="#" class="nav-item sub-item">دليل الهاتف</a>
+                    <a href="#" class="nav-item" data-view="all-ops-view"><i class="fas fa-history"></i> كل العمليات</a>
+                    <a href="#" class="nav-item" data-view="consumption-view"><i class="fas fa-chart-pie"></i> الاستهلاك</a>
+                    <a href="#" class="nav-item" data-view="phonebook-view"><i class="fas fa-address-book"></i> دليل الهاتف</a>
                 </div>
 
                 <div class="nav-group">
-                    <span class="group-title">ادارة الحسابات</span>
-                    <a href="#" class="nav-item sub-item">نسب الارباح</a>
-                    <a href="#" class="nav-item sub-item">التحويلات</a>
+                    <span class="group-title">الزبائن</span>
+                    <a href="#" class="nav-item" data-view="account-view"><i class="fas fa-users-cog"></i> إدارة الحسابات</a>
+                    <a href="#" class="nav-item" data-view="profits-view"><i class="fas fa-percent"></i> نسب الأرباح</a>
+                    <a href="#" class="nav-item" data-view="transfers-view"><i class="fas fa-exchange-alt"></i> التحويلات</a>
                 </div>
 
                 <div class="nav-group">
-                    <span class="group-title">المنتاجات والخدمات</span>
-                    <a href="#" class="nav-item sub-item">تحميل القسائم</a>
-                    <a href="#" class="nav-item sub-item">مخزون القسائم</a>
-                    <a href="#" class="nav-item sub-item">إدارة الشرائح</a>
-                    <a href="#" class="nav-item sub-item">البحث عن القسائم</a>
-                    <a href="#" class="nav-item sub-item">ادارة الاعلانات</a>
+                    <span class="group-title">الإعدادات</span>
+                    <a href="#" class="nav-item" data-view="sim-view"><i class="fas fa-sim-card"></i> إدارة الشرائح</a>
+                    <a href="#" class="nav-item" data-view="inventory-view"><i class="fas fa-boxes"></i> مخزون القسائم</a>
                 </div>
             </nav>
         </aside>
@@ -60,245 +63,155 @@
             <header class="top-bar">
                 <div class="right-section">
                     <button id="menu-toggle" class="icon-btn">
-                        <i class="fas fa-ellipsis-v"></i>
+                        <i class="fas fa-bars"></i>
                     </button>
                 </div>
                 <div class="left-section">
                     <div class="profile-icon">
-                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-user"></i>
                     </div>
                 </div>
             </header>
 
+            <!-- Home View -->
             <div id="home-view" class="view active">
                 <div class="scroll-area">
                     <!-- Ads Box -->
-                    <div class="ads-container">
-                        <div class="action-card ads-card">
-                            <div class="card-content">
-                                <i class="fas fa-bullhorn"></i>
-                                <div class="ads-text">
-                                    <h3>إعلانات وعروض</h3>
-                                    <p>تابع أحدث العروض والخدمات هنا</p>
-                                </div>
-                            </div>
+                    <div class="ads-card">
+                        <h3>أهلاً بك في Tobal Flexy</h3>
+                        <p>نظام التوزيع الذكي لخدمات الهاتف والإنترنت في الجزائر.</p>
+                    </div>
+
+                    <!-- Financial Status Cards -->
+                    <div class="stats-card">
+                        <div class="stat-item">
+                            <i class="fas fa-wallet"></i>
+                            <span class="label">رصيدي</span>
+                            <span class="value" id="main-balance">28,252,181.51 دج</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span class="label">ارباحي</span>
+                            <span class="value profit" id="main-profits">246,780.31 دج</span>
                         </div>
                     </div>
 
-                    <!-- Stats Section -->
-                    <section class="stats-section">
-                        <div class="stats-card">
-                            <div class="stat-item">
-                                <i class="fas fa-wallet"></i>
-                                <span class="label">رصيدي:</span>
-                                <span class="value">125,000.00 دج</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-hand-holding-usd"></i>
-                                <span class="label">ديوني:</span>
-                                <span class="value debt">15,000.00 دج</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-chart-line"></i>
-                                <span class="label">ارباحي:</span>
-                                <span class="value profit">3,500.00 دج</span>
-                            </div>
+                    <!-- Services Grid -->
+                    <div class="dashboard-grid">
+                        <div class="action-card" data-view="flexy-view">
+                            <i class="fas fa-mobile-alt" style="color: #696cff;"></i>
+                            <h3>فليكسي</h3>
                         </div>
-                    </section>
-
-                    <!-- Dashboard Grid -->
-                    <section class="dashboard-grid">
-                        <div class="action-card red-card">
-                            <div class="card-content">
-                                <i class="fas fa-mobile-alt"></i>
-                                <h3>فليكسي</h3>
-                            </div>
+                        <div id="idoom-card" class="action-card" data-view="idoom-view">
+                            <i class="fas fa-globe" style="color: #03c3ec;"></i>
+                            <h3>تعبئة ايدوم</h3>
                         </div>
-                        
-                        <div class="action-card green-card">
-                            <div class="card-content">
-                                <i class="fas fa-wifi"></i>
-                                <h3>تعبئة ادوم</h3>
-                            </div>
+                        <div class="action-card" data-view="cards-view">
+                            <i class="fas fa-ticket-alt" style="color: #71dd37;"></i>
+                            <h3>بطاقات</h3>
                         </div>
-
-                        <div class="action-card blue-card">
-                            <div class="card-content">
-                                <i class="fas fa-credit-card"></i>
-                                <h3>بطاقات</h3>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-
-            <div id="download-view" class="view">
-                <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
-                    <h2>تحميل القسائم</h2>
-                </div>
-                
-                <div class="form-container">
-                    <div class="input-group">
-                        <label>نوع القسائم</label>
-                        <select id="voucher-type" class="custom-select">
-                            <option value="Idoom">Idoom</option>
-                            <option value="Mobilis">Mobilis</option>
-                            <option value="Ooredoo">Ooredoo</option>
-                            <option value="Djezzy">Djezzy</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>فئة القسائم</label>
-                        <select id="voucher-category" class="custom-select">
-                            <option value="100 DA">100 DA</option>
-                            <option value="200 DA">200 DA</option>
-                            <option value="500 DA">500 DA</option>
-                            <option value="1000 DA">1000 DA</option>
-                            <option value="2000 DA">2000 DA</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>رفع ملف نصي (.txt)</label>
-                        <input type="file" id="voucher-file-input" accept=".txt" class="custom-file-input">
-                    </div>
-
-                    <div class="input-group">
-                        <label>أكواد القسائم (أو سيتم ملؤها تلقائياً عند رفع ملف)</label>
-                        <textarea id="voucher-codes" class="custom-textarea" placeholder="أدخل الأكواد هنا..."></textarea>
-                    </div>
-
-                    <button id="process-download" class="submit-btn green-btn">تحميل الآن</button>
-
-                    <div class="status-box-container">
-                        <div id="vouchers-status-box" class="status-box">
-                            جاهز للتحميل
+                        <div class="action-card" data-view="all-ops-view">
+                            <i class="fas fa-file-invoice" style="color: #ffab00;"></i>
+                            <h3>العمليات</h3>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Search View -->
-            <div id="search-view" class="view">
-                <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
-                    <h2>البحث عن القسائم</h2>
-                </div>
-                <div class="form-container">
-                    <input type="text" id="search-input" placeholder="أدخل الكود أو الرقم للتأكد..." class="custom-select">
-                    <button class="submit-btn blue-btn" style="margin-top:10px;">بحث الآن</button>
-                </div>
-            </div>
-
-            <!-- Phone Book View -->
-            <div id="phonebook-view" class="view">
-                <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
-                    <h2>دليل الهاتف</h2>
-                </div>
-                <div id="contacts-list" class="inventory-grid">
-                    <!-- Contacts -->
-                </div>
-            </div>
-
-            <!-- Idoom View -->
-            <div id="idoom-view" class="view">
-                <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
-                    <h2>تعبئة ادوم</h2>
-                </div>
-
-                <div class="flexy-form">
-                    <div class="input-card-white">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="idoom-number" placeholder="رقم الهاتف أو الحساب" maxlength="10">
-                    </div>
-
-                    <div class="input-group">
-                        <label>اختر البطاقة المتوفرة</label>
-                        <div id="available-idoom-vouchers" class="vouchers-selector-grid">
-                            <!-- Available vouchers will be injected here -->
-                        </div>
-                    </div>
-
-                    <div id="idoom-status-msg" class="status-box hidden"></div>
-
-                    <button id="submit-idoom" class="submit-btn send-btn">ارسال</button>
-                    
-                    <a href="https://paiement.at.dz/index.php?p=voucher_internet&produit=in" target="_blank" class="toggle-text" style="margin-top:10px;">الانتقال للموقع الرسمي للتأكد</a>
                 </div>
             </div>
 
             <!-- Flexy View -->
             <div id="flexy-view" class="view">
                 <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
                     <h2>فليكسي</h2>
                 </div>
-
                 <div class="flexy-form">
-                    <!-- Phone Number Input Box -->
                     <div class="input-card-white">
-                        <i class="fas fa-phone-alt"></i>
+                        <i class="fas fa-phone"></i>
                         <input type="tel" id="phone-input" placeholder="رقم الهاتف" maxlength="10">
                     </div>
-
-                    <!-- Dynamic Options (Hidden initially) -->
-                    <div id="phone-options" class="options-row hidden">
-                        <div class="mini-box active">1 رصيد</div>
-                        <div class="mini-box">2 عروض</div>
+                    <div class="input-group">
+                        <label>المبلغ</label>
+                        <input type="number" id="flexy-amount" class="custom-select" placeholder="0.00">
                     </div>
-
-                    <!-- Amount Input Section -->
-                    <div class="amount-container">
-                        <div class="amount-input-wrapper">
-                            <input type="number" placeholder="0.00">
-                            <span class="currency-label">المبلغ</span>
-                        </div>
-                    </div>
-
-                    <!-- Transaction Types -->
                     <div class="type-selection">
                         <div class="type-box active">عادي</div>
                         <div class="type-box">فاتورة</div>
-                        <div class="type-box">دولي</div>
                     </div>
+                    <button id="submit-flexy" class="submit-btn">إرسال العملية</button>
+                </div>
+            </div>
 
-                    <button id="submit-flexy" class="submit-btn send-btn">ارسال</button>
+            <!-- Idoom View -->
+            <div id="idoom-view" class="view">
+                <div class="view-header">
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
+                    <h2>تعبئة ايدوم</h2>
+                </div>
+                <div class="flexy-form">
+                    <div class="input-card-white">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="idoom-number" placeholder="رقم الهاتف أو الحساب">
+                    </div>
+                    <div class="input-group">
+                        <label>اختر البطاقة</label>
+                        <div id="available-idoom-vouchers" class="vouchers-selector-grid">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                    <button id="submit-idoom" class="submit-btn">تعبئة الآن</button>
                 </div>
             </div>
 
             <!-- Cards View -->
             <div id="cards-view" class="view">
                 <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
                     <h2>البطاقات المتوفرة</h2>
                 </div>
                 <div id="cards-grid" class="cards-display-grid">
-                    <!-- Cards will be injected here via JS -->
+                    <!-- Injected via JS -->
                 </div>
             </div>
 
             <!-- All Operations View -->
             <div id="all-ops-view" class="view">
                 <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
                     <h2>كل العمليات</h2>
                 </div>
-                <div class="search-box-container">
-                    <input type="text" placeholder="بحث عن عملية..." class="custom-select">
-                </div>
-                <div id="ops-list" class="inventory-grid" style="margin-top:20px;">
-                    <!-- Operations will be injected here -->
+                <div class="scroll-area">
+                    <div id="ops-list" class="inventory-grid">
+                        <!-- Injected via JS -->
+                    </div>
                 </div>
             </div>
 
+            <!-- SIM Management View -->
+            <div id="sim-view" class="view">
+                <div class="view-header">
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
+                    <h2>إدارة الشرائح</h2>
+                </div>
+                <div id="sim-list" class="sim-grid">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <!-- Inventory View -->
+            <div id="inventory-view" class="view">
+                <div class="view-header">
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
+                    <h2>مخزون القسائم</h2>
+                </div>
+                <div id="inventory-list" class="inventory-grid">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+            
             <!-- Profits View -->
             <div id="profits-view" class="view">
                 <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
+                    <button class="back-btn"><i class="fas fa-chevron-right"></i></button>
                     <h2>نسب الأرباح</h2>
                 </div>
                 <div class="stats-card">
@@ -307,29 +220,29 @@
                 </div>
             </div>
 
-            <!-- SIM Management View -->
-            <div id="sim-view" class="view">
-                <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
-                    <h2>إدارة الشرائح</h2>
-                    <button id="scan-hilink" class="icon-btn" title="فحص HiLink"><i class="fas fa-sync-alt"></i></button>
-                </div>
-                <div id="sim-list" class="sim-grid">
-                    <!-- SIM cards will be injected here via JS -->
-                </div>
             </div>
 
-            <!-- Inventory View -->
-            <div id="inventory-view" class="view">
-                <div class="view-header">
-                    <button class="back-btn"><i class="fas fa-arrow-right"></i></button>
-                    <h2>مخزون القسائم</h2>
-                </div>
-                <div id="inventory-list" class="inventory-grid">
-                    <!-- Cards will be injected here via JS -->
-                </div>
-            </div>
         </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="bottom-nav-item active" data-view="home-view">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="#" class="bottom-nav-item" data-view="cards-view">
+                <i class="fas fa-credit-card"></i>
+                <span>البطاقات</span>
+            </a>
+            <a href="#" class="bottom-nav-item" data-view="all-ops-view">
+                <i class="fas fa-history"></i>
+                <span>العمليات</span>
+            </a>
+            <a href="#" class="bottom-nav-item" id="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+                <span>القائمة</span>
+            </a>
+        </nav>
 
         <!-- Overlay -->
         <div id="overlay" class="overlay"></div>

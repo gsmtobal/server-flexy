@@ -17,14 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Selectors ---
     const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const closeSidebar = document.getElementById('close-sidebar');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
-    const homeView = document.getElementById('home-view');
-    const downloadVouchersView = document.getElementById('download-view');
-    const flexyView = document.getElementById('flexy-view');
-    const inventoryView = document.getElementById('inventory-view');
     const backBtns = document.querySelectorAll('.back-btn');
+    const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item, .action-card');
 
     // --- Local Database Logic (LocalStorage) ---
     const DB_KEY = 'tobal_vouchers_db';
@@ -42,18 +40,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Navigation & View Switching ---
-    let showView = (viewName) => {
+    const showView = (viewId) => {
         const views = document.querySelectorAll('.view');
         views.forEach(v => v.classList.remove('active'));
         
-        const targetView = document.getElementById(`${viewName}-view`);
+        const targetView = document.getElementById(viewId);
         if (targetView) {
             targetView.classList.add('active');
-            if (viewName === 'inventory') renderInventory();
-            if (viewName === 'idoom') renderIdoomVouchers();
-            if (viewName === 'cards') renderCards();
-        } else {
-            homeView.classList.add('active');
+            
+            // Sync nav active states
+            document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(item => {
+                if (item.dataset.view === viewId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Specific view logic
+            if (viewId === 'inventory-view') renderInventory();
+            if (viewId === 'idoom-view') renderIdoomVouchers();
+            if (viewId === 'cards-view') renderCards();
+            if (viewId === 'sim-view') renderSIMs();
+            if (viewId === 'all-ops-view') renderOperations();
+            if (viewId === 'phonebook-view') renderPhonebook();
         }
     };
 
@@ -64,46 +74,29 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
     if (closeSidebar) closeSidebar.addEventListener('click', toggleSidebar);
     if (overlay) overlay.addEventListener('click', toggleSidebar);
 
-    // Sidebar Links
-    const navItems = document.querySelectorAll('.nav-item');
+    // Nav Item Click Logic
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
-            const text = item.textContent;
-            navItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-
-            if (text.includes('تحميل القسائم')) showView('download');
-            else if (text.includes('مخزون القسائم')) showView('inventory');
-            else if (text.includes('الصفحة الرئيسية')) showView('home');
-            else if (text.includes('تعبئة ادوم')) showView('idoom');
-            else if (text.includes('البطاقات')) showView('cards');
-            else if (text.includes('إدارة الشرائح')) showView('sim');
-            else if (text.includes('كل العمليات')) showView('all-ops');
-            else if (text.includes('نسب الارباح')) showView('profits');
-            else if (text.includes('دليل الهاتف')) showView('phonebook');
-            else if (text.includes('البحث عن القسائم')) showView('search');
-
-            if (window.innerWidth < 1024) toggleSidebar();
+            const viewId = item.dataset.view;
+            if (viewId) {
+                e.preventDefault();
+                showView(viewId);
+                if (window.innerWidth < 1024 && sidebar.classList.contains('active')) {
+                    toggleSidebar();
+                }
+            }
         });
     });
 
-    // Home Action Cards
-    document.querySelector('.red-card')?.addEventListener('click', () => showView('flexy'));
-    document.querySelector('.green-card')?.addEventListener('click', () => showView('idoom'));
-    document.querySelector('.blue-card')?.addEventListener('click', () => showView('cards'));
-    backBtns.forEach(btn => btn.addEventListener('click', () => showView('home')));
+    backBtns.forEach(btn => btn.addEventListener('click', () => showView('home-view')));
 
     // --- View Rendering Logic ---
-    const renderAllViews = (viewName) => {
-        if (viewName === 'sim') renderSIMs();
-        if (viewName === 'all-ops') renderOperations();
-        if (viewName === 'phonebook') renderPhonebook();
-    };
 
-    // --- SIM Management Rendering ---
+    // SIM Management
     const renderSIMs = () => {
         const list = document.getElementById('sim-list');
         if (!list) return;
@@ -116,88 +109,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="sim-header-row">
                             <div class="sim-info">
                                 <span class="operator">${sim.operator || 'Unknown'}</span>
-                                <input type="text" value="${sim.name || 'شريحة جديدة'}" placeholder="اسم الشريحة" class="sim-name-input" style="background:none; border:none; color:white; font-weight:bold; font-size:1.1rem;">
+                                <h4>${sim.name || 'شريحة جديدة'}</h4>
                             </div>
                             <div class="sim-status">
-                                <div class="signal-bars">
-                                    <div class="bar bar-1 ${signal >= 1 ? 'active' : ''}"></div>
-                                    <div class="bar bar-2 ${signal >= 2 ? 'active' : ''}"></div>
-                                    <div class="bar bar-3 ${signal >= 3 ? 'active' : ''}"></div>
-                                    <div class="bar bar-4 ${signal >= 4 ? 'active' : ''}"></div>
-                                </div>
-                                <span style="font-size:0.7rem; color:var(--text-secondary);">${sim.balance || '0.00'} دج</span>
+                                <span class="balance">${sim.balance || '0.00'} دج</span>
                             </div>
                         </div>
                         
                         <div class="sim-settings-grid">
-                            <div class="sim-input-group">
-                                <label>كود PIN</label>
-                                <input type="text" value="${sim.pin || '0000'}" class="sim-pin">
-                            </div>
-                            <div class="sim-input-group">
-                                <label>كود عادي</label>
-                                <input type="text" value="${sim.code_normal || '*611*'}" class="sim-normal">
-                            </div>
-                            <div class="sim-input-group">
-                                <label>كود مفعل</label>
-                                <input type="text" value="${sim.code_active || ''}" class="sim-active">
-                            </div>
-                            <div class="sim-input-group">
-                                <label>كود فاتورة</label>
-                                <input type="text" value="${sim.code_invoice || ''}" class="sim-invoice">
-                            </div>
+                            <div class="sim-input-group"><label>كود PIN</label><input type="text" value="${sim.pin || '0000'}"></div>
+                            <div class="sim-input-group"><label>كود عادي</label><input type="text" value="${sim.code_normal || '*611*'}"></div>
                         </div>
-                        
-                        <button class="save-sim-btn" onclick="saveSimSettings('${sim.id || sim.port}')">حفظ الإعدادات</button>
+                        <button class="submit-btn" style="padding: 8px; font-size: 0.8rem;">حفظ الإعدادات</button>
                     </div>
                 `;
             }).join('') || '<p style="text-align:center; padding:20px;">لا توجد شرائح متصلة</p>';
         };
 
-        if (typeof db_cloud !== 'undefined' && db_cloud) {
-            db_cloud.collection('sim_status').onSnapshot((snapshot) => {
-                if (snapshot.empty) {
-                    showMockSIMs();
-                } else {
-                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderItems(data);
-                }
-            }, (error) => {
-                console.error("Firebase Error:", error);
-                showMockSIMs();
-            });
-        } else {
-            showMockSIMs();
-        }
-
-        function showMockSIMs() {
-            renderItems([
-                { id: 'mock1', port: 'COM3 (HiLink)', operator: 'Mobilis', balance: '1,500.00', signal: 4, name: 'الشريحة الأساسية', pin: '0000', code_normal: '*611*' },
-                { id: 'mock2', port: 'COM5 (HiLink)', operator: 'Djezzy', balance: '850.00', signal: 3, name: 'شريحة الاحتياط', pin: '1234', code_normal: '*710*' }
-            ]);
-        }
+        renderItems([
+            { id: 'mock1', operator: 'Mobilis', balance: '1,500.00', signal: 4, name: 'الشريحة الأساسية', pin: '0000', code_normal: '*611*' },
+            { id: 'mock2', operator: 'Djezzy', balance: '850.00', signal: 3, name: 'شريحة الاحتياط', pin: '1234', code_normal: '*710*' }
+        ]);
     };
 
-    window.saveSimSettings = async (id) => {
-        const card = event.target.closest('.sim-card-box');
-        const settings = {
-            name: card.querySelector('.sim-name-input').value,
-            pin: card.querySelector('.sim-pin').value,
-            code_normal: card.querySelector('.sim-normal').value,
-            code_active: card.querySelector('.sim-active').value,
-            code_invoice: card.querySelector('.sim-invoice').value
-        };
-
-        if (typeof db_cloud !== 'undefined' && db_cloud) {
-            await db_cloud.collection('sim_status').doc(id.replace(/[^a-zA-Z0-9]/g, '_')).update(settings);
-            alert('تم حفظ إعدادات الشريحة بنجاح!');
-        } else {
-            alert('تم حفظ الإعدادات محلياً (وضع التجربة)');
-        }
-    };
-
-
-    // --- Operations Rendering ---
+    // Operations
     const renderOperations = () => {
         const list = document.getElementById('ops-list');
         if (!list) return;
@@ -212,45 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="voucher-card">
                 <div class="voucher-info">
                     <strong>${op.type} - ${op.phone}</strong>
-                    <span>المبلغ: ${op.amount} دج | ${op.time}</span>
+                    <div style="font-size: 0.8rem; color: var(--secondary);">${op.amount} دج | ${op.time}</div>
                 </div>
                 <div class="voucher-status ${op.status}">${op.status === 'success' ? 'ناجحة' : 'فاشلة'}</div>
             </div>
         `).join('');
     };
 
-    // --- Phonebook Rendering ---
-    const renderPhonebook = () => {
-        const list = document.getElementById('contacts-list');
-        if (!list) return;
-        const mockContacts = [
-            { name: 'أحمد محمد', phone: '0661000000' },
-            { name: 'ياسين فليكسي', phone: '0550111111' }
-        ];
-        list.innerHTML = mockContacts.map(c => `
-            <div class="voucher-card">
-                <div class="voucher-info">
-                    <strong>${c.name}</strong>
-                    <span>رقم الهاتف: ${c.phone}</span>
-                </div>
-                <div class="voucher-status unused" style="cursor:pointer;" onclick="fillPhone('${c.phone}')">فليكسي</div>
-            </div>
-        `).join('');
-    };
-
-    window.fillPhone = (phone) => {
-        showView('flexy');
-        document.getElementById('phone-input').value = phone;
-    };
-
-    // --- Navigation Override ---
-    const originalShowView = showView;
-    showView = (viewName) => {
-        originalShowView(viewName);
-        renderAllViews(viewName);
-    };
-
-    // --- Inventory Rendering ---
+    // Inventory
     const renderInventory = () => {
         const list = document.getElementById('inventory-list');
         if (!list) return;
@@ -259,21 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="voucher-card">
                 <div class="voucher-info">
                     <strong>${v.type} - ${v.category}</strong>
-                    <span>كود: ${v.code}</span>
+                    <div style="font-size: 0.8rem; color: var(--secondary);">كود: ${v.code}</div>
                 </div>
                 <div class="voucher-status ${v.status}">${v.status === 'unused' ? 'غير مستخدم' : 'مستخدم'}</div>
             </div>
         `).join('') || '<p style="text-align:center; padding:20px;">المخزن فارغ</p>';
     };
 
-    // --- Cards Rendering ---
+    // Cards
     const renderCards = () => {
         const grid = document.getElementById('cards-grid');
         if (!grid) return;
-        
         const vouchers = getVouchers().filter(v => v.status === 'unused');
-        
-        // Always show these providers
         const providers = [
             { type: 'Idoom', name: 'اتصالات الجزائر' },
             { type: 'Mobilis', name: 'موبيليس' },
@@ -282,23 +183,26 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
 
         grid.innerHTML = providers.map(p => {
-            // Count vouchers for this provider across all categories
             const count = vouchers.filter(v => v.type.toLowerCase() === p.type.toLowerCase()).length;
-            
             return `
-                <div class="card-item-box" onclick="showView('${p.type.toLowerCase() === 'idoom' ? 'idoom' : 'flexy'}')">
+                <div class="card-item-box" data-view="${p.type.toLowerCase() === 'idoom' ? 'idoom-view' : 'flexy-view'}">
                     <div class="card-image-container">
-                        <img src="${p.type.toLowerCase()}.png" onerror="this.src='https://via.placeholder.com/150x100/${getColorForType(p.type)}/ffffff?text=${p.type}'" class="card-img" alt="${p.type}">
+                        <img src="https://via.placeholder.com/150x100/${getColorForType(p.type)}/ffffff?text=${p.type}" class="card-img" alt="${p.type}">
                     </div>
                     <div class="card-item-info">
-                        <h4 style="margin-top:10px;">${p.name}</h4>
-                        <span style="color: ${count > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                        <h4>${p.name}</h4>
+                        <span style="color: ${count > 0 ? 'var(--success)' : 'var(--danger)'}">
                             ${count > 0 ? 'متوفر: ' + count : 'نفذت الكمية'}
                         </span>
                     </div>
                 </div>
             `;
         }).join('');
+
+        // Re-attach listeners for cards
+        grid.querySelectorAll('.card-item-box').forEach(card => {
+            card.addEventListener('click', () => showView(card.dataset.view));
+        });
     };
 
     const getColorForType = (type) => {
@@ -311,27 +215,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Idoom Rendering ---
+    // Idoom Vouchers Selection
     let selectedVoucherId = null;
     const renderIdoomVouchers = () => {
         const container = document.getElementById('available-idoom-vouchers');
         if (!container) return;
-        
         const vouchers = getVouchers().filter(v => v.type === 'Idoom' && v.status === 'unused');
         
         if (vouchers.length === 0) {
-            container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:10px; color:var(--accent-red);">لا توجد بطاقات Idoom متوفرة حالياً</p>';
+            container.innerHTML = '<p style="text-align:center; padding:10px; color:var(--danger);">لا توجد بطاقات متوفرة</p>';
             return;
         }
 
         container.innerHTML = vouchers.map(v => `
             <div class="voucher-select-item" data-id="${v.id}">
                 <strong>${v.category}</strong>
-                <span>كود: ${v.code.substring(0, 5)}*****</span>
+                <span style="font-size: 0.7rem;">كود: ${v.code.substring(0, 5)}*****</span>
             </div>
         `).join('');
 
-        // Selection logic
         container.querySelectorAll('.voucher-select-item').forEach(item => {
             item.addEventListener('click', () => {
                 container.querySelectorAll('.voucher-select-item').forEach(i => i.classList.remove('active'));
@@ -342,205 +244,47 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Actions ---
-    // Idoom Submit Action
-    const submitIdoomBtn = document.getElementById('submit-idoom');
-    const idoomStatusMsg = document.getElementById('idoom-status-msg');
-    const idoomNumberInput = document.getElementById('idoom-number');
 
-    if (submitIdoomBtn) {
-        submitIdoomBtn.addEventListener('click', async () => {
-            const idoomNumber = idoomNumberInput.value.trim();
-            if (!idoomNumber) {
-                alert('الرجاء إدخال رقم الهاتف أو الحساب');
-                return;
-            }
-            if (!selectedVoucherId) {
-                alert('الرجاء اختيار بطاقة من القائمة');
-                return;
-            }
-
-            const vouchers = getVouchers();
-            const voucher = vouchers.find(v => v.id === selectedVoucherId);
-
-            // Real Automation Call
-            submitIdoomBtn.disabled = true;
-            submitIdoomBtn.innerText = 'جاري التشغيل...';
-            idoomStatusMsg.classList.remove('hidden');
-            idoomStatusMsg.innerText = 'جاري فتح نافذة الأتمتة... يرجى حل الكابتشا عند ظهورها.';
-
-            try {
-                const response = await fetch('http://localhost:3000/recharge-idoom', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        account: idoomNumber,
-                        pin: voucher.code
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Update DB status to used
-                    const index = vouchers.findIndex(v => v.id === selectedVoucherId);
-                    if (index !== -1) {
-                        vouchers[index].status = 'used';
-                        saveVouchers(vouchers);
-                    }
-
-                    idoomStatusMsg.innerText = 'تمت العملية بنجاح! تم استخدام البطاقة.';
-                    idoomStatusMsg.classList.add('purple');
-                    alert('تمت عملية التعبئة بنجاح!');
-                } else {
-                    idoomStatusMsg.innerText = 'خطأ: ' + result.message;
-                    alert('حدث خطأ في عملية الأتمتة: ' + result.message);
-                }
-            } catch (error) {
-                console.error(error);
-                idoomStatusMsg.innerText = 'فشل الاتصال بالخادم المحلي. تأكد من تشغيل automation_server.js';
-                alert('تأكد من تشغيل خادم الأتمتة المحلي (Node.js)');
-            } finally {
-                submitIdoomBtn.disabled = false;
-                submitIdoomBtn.innerText = 'ارسال';
-                selectedVoucherId = null;
-                renderIdoomVouchers();
-            }
-        });
-    }
-
-    // Download (Upload) Button Action
-    const processDownloadBtn = document.getElementById('process-download');
-    const voucherTypeSelect = document.getElementById('voucher-type');
-    const voucherCategorySelect = document.getElementById('voucher-category');
-    const voucherCodesTextarea = document.getElementById('voucher-codes');
-    const vouchersStatusBox = document.getElementById('vouchers-status-box');
-
-    if (processDownloadBtn) {
-        processDownloadBtn.addEventListener('click', () => {
-            const type = voucherTypeSelect.value;
-            const category = voucherCategorySelect.value;
-            const rawCodes = voucherCodesTextarea.value.trim();
-
-            if (!rawCodes) {
-                alert('الرجاء إدخال أكواد القسائم أولاً');
-                return;
-            }
-
-            const codes = rawCodes.split('\n').map(c => c.trim()).filter(c => c.length > 0);
-            const vouchers = getVouchers();
-            
-            let count = 0;
-            codes.forEach(code => {
-                // Basic validation: Check if code already exists or is valid
-                if (code.length >= 10) { // Assuming min 10 digits
-                    vouchers.push({
-                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                        type: type,
-                        category: category,
-                        code: code,
-                        status: 'unused'
-                    });
-                    count++;
-                }
-            });
-
-            if (count > 0) {
-                saveVouchers(vouchers);
-                voucherCodesTextarea.value = '';
-                vouchersStatusBox.innerText = `تم تحميل ${count} قسيمة بنجاح!`;
-                vouchersStatusBox.classList.add('purple');
-                setTimeout(() => {
-                    vouchersStatusBox.innerText = 'جاهز للتحميل';
-                    vouchersStatusBox.classList.remove('purple');
-                }, 3000);
-                alert(`تم بنجاح إضافة ${count} قسيمة إلى المخزون`);
-            } else {
-                alert('لم يتم العثور على أكواد صالحة للتحميل');
-            }
-        });
-    }
-
-    // File Input Logic
-    const voucherFileInput = document.getElementById('voucher-file-input');
-    if (voucherFileInput && voucherCodesTextarea) {
-        voucherFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                voucherCodesTextarea.value = event.target.result;
-                vouchersStatusBox.innerText = 'تم قراءة الملف، يمكنك التحميل الآن';
-            };
-            reader.readAsText(file);
-        });
-    }
-
-    // Flexy Phone Input
-    const phoneInput = document.getElementById('phone-input');
-    const phoneOptions = document.getElementById('phone-options');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', () => {
-            phoneOptions.classList.toggle('hidden', phoneInput.value.length === 0);
-        });
-    }
-
-    // --- Flexy Cloud Logic ---
+    // Flexy Action
     const submitFlexyBtn = document.getElementById('submit-flexy');
-    const flexyAmountInput = document.querySelector('.input-card-white input'); // Need to be more specific if possible
-    
-    if (submitFlexyBtn && typeof db_cloud !== 'undefined') {
-        submitFlexyBtn.addEventListener('click', async () => {
-            const amount = document.querySelector('.amount-input-wrapper input')?.value;
-            const phone = document.getElementById('phone-input')?.value;
-            const provider = document.querySelector('.mini-box.active')?.innerText || 'Unknown';
-
-            if (!amount || !phone) {
-                alert('الرجاء إدخال المبلغ ورقم الهاتف');
+    if (submitFlexyBtn) {
+        submitFlexyBtn.addEventListener('click', () => {
+            const phone = document.getElementById('phone-input').value;
+            const amount = document.getElementById('flexy-amount').value;
+            if (!phone || !amount) {
+                alert('الرجاء إدخال الرقم والمبلغ');
                 return;
             }
-
-            submitFlexyBtn.disabled = true;
-            submitFlexyBtn.innerText = 'جاري الإرسال للسحابة...';
-
-            try {
-                const docRef = await db_cloud.collection('flexy_requests').add({
-                    amount: amount,
-                    phone: phone,
-                    provider: provider,
-                    status: 'pending',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Listen for changes (Success/Fail)
-                db_cloud.collection('flexy_requests').doc(docRef.id).onSnapshot((doc) => {
-                    const data = doc.data();
-                    if (data.status === 'success') {
-                        submitFlexyBtn.innerText = 'تم الإرسال بنجاح ✅';
-                        submitFlexyBtn.style.background = 'var(--accent-blue)';
-                        alert('تمت عملية الفليكسي بنجاح من الحاسوب البعيد!');
-                        setTimeout(() => {
-                            submitFlexyBtn.disabled = false;
-                            submitFlexyBtn.innerText = 'ارسال';
-                            submitFlexyBtn.style.background = '';
-                        }, 3000);
-                    } else if (data.status === 'failed') {
-                        alert('فشلت العملية: ' + data.error);
-                        submitFlexyBtn.disabled = false;
-                        submitFlexyBtn.innerText = 'ارسال';
-                    }
-                });
-
-            } catch (error) {
-                console.error(error);
-                alert('خطأ في الربط السحابي: ' + error.message);
-                submitFlexyBtn.disabled = false;
-                submitFlexyBtn.innerText = 'ارسال';
-            }
+            alert(`تم إرسال طلب فليكسي للرقم ${phone} بمبلغ ${amount} دج`);
         });
     }
 
-    // Selection Toggles (Mini boxes / Type boxes)
+    // Idoom Action
+    const submitIdoomBtn = document.getElementById('submit-idoom');
+    if (submitIdoomBtn) {
+        submitIdoomBtn.addEventListener('click', () => {
+            const number = document.getElementById('idoom-number').value;
+            if (!number || !selectedVoucherId) {
+                alert('الرجاء إدخال الرقم واختيار بطاقة');
+                return;
+            }
+            alert(`تم إرسال طلب تعبئة ايدوم للرقم ${number}`);
+        });
+    }
+
+    // Phonebook (Mock for now)
+    const renderPhonebook = () => {
+        const list = document.getElementById('phonebook-view').querySelector('.inventory-grid');
+        if (!list) return;
+        list.innerHTML = `
+            <div class="voucher-card">
+                <div class="voucher-info"><strong>أحمد محمد</strong><div>0661000000</div></div>
+                <button class="submit-btn" style="padding: 5px 10px;">اختيار</button>
+            </div>
+        `;
+    };
+
+    // Selection Toggles
     const setupSelection = (selector) => {
         document.querySelectorAll(selector).forEach(box => {
             box.addEventListener('click', () => {
@@ -549,8 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
-    setupSelection('.mini-box');
     setupSelection('.type-box');
 
-    // Vouchers Status Toggle (Purple logic - No longer used as previous toggle was removed)
+    // Initial View
+    showView('home-view');
 });

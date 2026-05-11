@@ -13,6 +13,8 @@ window.syncModem = async (modemId) => {
     const sim = sims.find(s => s.modem_id === modemId);
     if (!sim || !sim.modem_ip) return;
 
+    console.log(`[Tobal Gsm] Sending Sync Request for ${modemId}...`);
+    
     try {
         const response = await fetch(`http://localhost:3000/api/sync-hilink/${sim.modem_ip}`);
         const result = await response.json();
@@ -22,24 +24,18 @@ window.syncModem = async (modemId) => {
             sim.signal = result.data.signal;
             sim.carrier = result.data.carrier;
             sim.last_sync = result.data.last_update;
-            
-            // Only update balance if real data exists in the response
-            if (result.data.balance) {
-                sim.balance = result.data.balance;
-            }
-            
             setData(SIMS_KEY, sims);
             if (typeof window.renderModems === 'function') window.renderModems();
             alert(`✅ تم تحديث بيانات المودم ${modemId} بنجاح!`);
         } else {
-            alert(`❌ فشل الاتصال بالمودم: ${result.message}`);
+            alert(`❌ فشل السيرفر في جلب البيانات: ${result.message}`);
         }
     } catch (error) {
-        alert(`❌ السيرفر المحلي غير مشغل. يرجى تشغيل run_server.bat`);
+        alert(`❌ فشل الاتصال بالسيرفر (localhost:3000).\n\nالحل: تأكد من تشغيل run_server.bat ومن فتح هذا الموقع من "الملف المحلي" (File) وليس من رابط GitHub.`);
     }
 };
 
-// 2. Reset/Delete Balance
+// 2. Reset Balance
 window.resetBalance = (modemId) => {
     const sims = getData(SIMS_KEY);
     const sim = sims.find(s => s.modem_id === modemId);
@@ -47,11 +43,41 @@ window.resetBalance = (modemId) => {
         sim.balance = 0;
         setData(SIMS_KEY, sims);
         window.renderModems();
-        alert('تم تصفير الرصيد بنجاح.');
     }
 };
 
-// 3. Delete Modem
+// 3. Execute Quick USSD (Firm Implementation)
+window.executeQuickUSSD = async (modemId) => {
+    const sims = getData(SIMS_KEY);
+    const sim = sims.find(s => s.modem_id === modemId);
+    if (!sim || !sim.modem_ip) return;
+
+    let code = "*200*PIN#";
+    if (sim.pin) code = code.replace('PIN', sim.pin);
+    else code = code.replace('PIN', '0000');
+
+    console.log(`[Tobal Gsm] FIRM ORDER: Sending USSD [${code}] to local server...`);
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/send-ussd`, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip: sim.modem_ip, code: code })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert(`✅ تم إرسال الطلب بنجاح! تحقق من الشاشة السوداء.`);
+        } else {
+            alert(`❌ السيرفر استلم الطلب لكن المودم رفض: ${result.message}`);
+        }
+    } catch (error) {
+        alert(`❌ الطلب لم يصل للسيرفر أصلاً!\n\nالسبب: المتصفح يمنع الاتصال من GitHub بالسيرفر المحلي.\nالحل: افتح ملف sim_dashboard.html من جهازك مباشرة.`);
+    }
+};
+
+// 4. Delete Modem
 window.deleteModem = (id) => {
     if (confirm('هل أنت متأكد من حذف هذه الشريحة؟')) {
         const sims = getData(SIMS_KEY).filter(s => s.id !== id);
@@ -60,43 +86,11 @@ window.deleteModem = (id) => {
     }
 };
 
-// 3. Execute Quick USSD
-window.executeQuickUSSD = async (modemId) => {
-    const sims = getData(SIMS_KEY);
-    const sim = sims.find(s => s.modem_id === modemId);
-    if (!sim || !sim.modem_ip) return;
-
-    let code = "*200*PIN#";
-    if (sim && sim.pin) code = code.replace('PIN', sim.pin);
-    else code = code.replace('PIN', '0000');
-
-    console.log(`[Tobal Gsm] Requesting USSD [${code}] for ${modemId}...`);
-
-    try {
-        const response = await fetch(`http://localhost:3000/api/send-ussd`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ip: sim.modem_ip, code: code })
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            alert(`✅ تم إرسال طلب USSD (${code}) للمودم بنجاح! راقب شاشة السيرفر.`);
-        } else {
-            alert(`❌ فشل إرسال USSD: ${result.message}`);
-        }
-    } catch (error) {
-        alert(`❌ فشل الاتصال بالسيرفر المحلي. تأكد من تشغيل run_server.bat`);
-    }
-};
-
-
 document.addEventListener('DOMContentLoaded', () => {
     // Seed data with the real Ooredoo modem found
     if (getData(SIMS_KEY).length === 0) {
         setData(SIMS_KEY, [
-            { id: 'sim_real_01', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' },
-            { id: 'sim_01', station: 'station_1', modem_id: 'modem_01', sim_type: 'Mobilis', number: '0661223344', label: 'المحل الرئيسي', priority: 1, balance: 1500.50, signal: 5, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' }
+            { id: 'sim_real_01', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' }
         ]);
     }
 
@@ -106,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modemTableBody = document.getElementById('modem-table-body');
     const smsTableBody = document.getElementById('sms-table-body');
     const ussdModemSelect = document.getElementById('ussd-modem-select');
-    const ussdResults = document.getElementById('ussd-results');
     const addModemModal = document.getElementById('addModemModal');
     const btnAddModem = document.getElementById('btn-add-modem');
     const addModemForm = document.getElementById('add-modem-form');
@@ -126,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td><strong>${sim.modem_id}</strong><br><small class="text-muted">${sim.modem_ip || 'Serial'}</small></td>
                     <td>${sim.station}</td>
-                    <td><span class="badge bg-label-${getOperatorColor(sim.sim_type)}">${sim.carrier || sim.sim_type}</span></td>
+                    <td><span class="badge bg-label-danger">${sim.carrier || sim.sim_type}</span></td>
                     <td>${sim.number}</td>
                     <td>${sim.label || '-'}</td>
                     <td>
@@ -143,13 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </td>
                     <td><span class="text-muted small">${sim.min_balance || 0} دج</span></td>
-                    <td><span class="status-dot"><i class="fas fa-circle" style="color: ${sim.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></i> ${sim.status === 'online' ? 'متصل' : 'أوفلاين'}</span></td>
+                    <td><span class="status-dot"><i class="fas fa-circle" style="color: ${sim.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></i> ${sim.status === 'online' ? 'متصل' : 'أونلاين'}</span></td>
                     <td>
                         <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-icon btn-outline-primary" onclick="syncModem('${sim.modem_id}')" title="تحديث حقيقي">
+                            <button class="btn btn-sm btn-icon btn-outline-primary" onclick="syncModem('${sim.modem_id}')" title="مزامنة حقيقية">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
-                            <button class="btn btn-sm btn-icon btn-outline-secondary" onclick="executeQuickUSSD('${sim.modem_id}')" title="تنفيذ USSD">
+                            <button class="btn btn-sm btn-icon btn-outline-secondary" onclick="executeQuickUSSD('${sim.modem_id}')" title="طلب الرصيد USSD">
                                 <i class="fas fa-terminal"></i>
                             </button>
                             <button class="btn btn-sm btn-icon btn-outline-danger" onclick="deleteModem('${sim.id}')" title="حذف">
@@ -160,13 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             `).join('');
         }
-    };
-
-    const getOperatorColor = (type) => {
-        if (type === 'Mobilis') return 'success';
-        if (type === 'Djezzy') return 'dark';
-        if (type === 'Ooredoo') return 'danger';
-        return 'primary';
     };
 
     const renderSMS = () => {
@@ -184,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Navigation Logic ---
     const showView = (viewId) => {
         viewContents.forEach(view => view.classList.remove('active'));
         const el = document.getElementById(viewId);
@@ -206,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Modal Handling ---
     if (btnAddModem) btnAddModem.addEventListener('click', () => addModemModal.classList.add('active'));
     if (addModemModal) addModemModal.addEventListener('click', (e) => { if (e.target === addModemModal) addModemModal.classList.remove('active'); });
     document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => btn.addEventListener('click', () => addModemModal.classList.remove('active')));
@@ -245,6 +229,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.layout-overlay').classList.toggle('active');
     });
 
-    // Initial Render
     showView('modem-info');
 });

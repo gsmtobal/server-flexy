@@ -94,7 +94,13 @@ app.get('/api/sync-hilink/:ip', async (req, res) => {
 // 2. Execute USSD via HiLink (New)
 app.post('/api/send-ussd', async (req, res) => {
     const { ip, code } = req.body;
-    console.log(`[SIM Server] Sending USSD [${code}] to Modem at ${ip}...`);
+    console.log(`
+-----------------------------------------
+[FIRM ORDER] Received USSD Request!
+IP: ${ip}
+Code: ${code}
+-----------------------------------------
+    `);
 
     try {
         // Step 1: Get Session/Token

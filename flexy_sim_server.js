@@ -43,40 +43,51 @@ app.get('/', (req, res) => {
 // 1. Sync data from a HiLink Modem (like 192.168.50.1)
 app.get('/api/sync-hilink/:ip', async (req, res) => {
     const modemIp = req.params.ip;
-    console.log(`[SIM Server] Fetching real data from ${modemIp}...`);
+    console.log(`[SIM Server] Authenticating and fetching from ${modemIp}...`);
 
     try {
-        // Fetch Monitoring Status
-        const statusResp = await axios.get(`http://${modemIp}/api/monitoring/status`, { timeout: 3000 });
-        const xml = statusResp.data;
-
-        // Simple XML Parser using Regex for HiLink
-        const getValue = (tag) => {
-            const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`, 'i')); // Case-insensitive
+        // Step 1: Get Session and Token (SesTokInfo)
+        const sesTokResp = await axios.get(`http://${modemIp}/api/webserver/SesTokInfo`, { timeout: 3000 });
+        const sesTokXml = sesTokResp.data;
+        
+        const getXmlVal = (xml, tag) => {
+            const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`, 'i'));
             return match ? match[1] : null;
         };
 
-        console.log(`[SIM Server] Raw Modem Response: ${xml.substring(0, 200)}...`);
+        const sessionId = getXmlVal(sesTokXml, 'SesInfo');
+        const token = getXmlVal(sesTokXml, 'TokInfo');
 
-        // Try common signal tags
-        let signal = getValue('SignalIcon') || getValue('signalicon') || getValue('SignalStrength');
+        if (!sessionId || !token) throw new Error("Could not get Session/Token");
 
-        const networkType = getValue('CurrentNetworkType') || 'Unknown';
-        const serviceStatus = getValue('ServiceStatus'); 
+        // Step 2: Fetch Monitoring Status with Headers
+        const statusResp = await axios.get(`http://${modemIp}/api/monitoring/status`, {
+            headers: {
+                'Cookie': sessionId,
+                '__RequestVerificationToken': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            timeout: 3000
+        });
+
+        const xml = statusResp.data;
+        console.log(`[SIM Server] Modem Response Received.`);
+
+        const signal = getXmlVal(xml, 'SignalIcon');
+        const networkType = getXmlVal(xml, 'CurrentNetworkType');
 
         const data = {
-            status: (serviceStatus == '2' || signal == '0') ? 'offline' : 'online',
+            status: 'online',
             signal: Math.max(0, Math.min(5, parseInt(signal || 0))),
             carrier: networkType == '3' ? 'Ooredoo 3G' : 'Ooredoo 4G',
             last_update: new Date().toLocaleString()
         };
 
-        console.log(`[SIM Server] Successfully parsed modem data: Signal=${data.signal}, Status=${data.status}`);
         res.json({ success: true, data });
 
     } catch (error) {
         console.error(`[SIM Server] Error: ${error.message}`);
-        res.status(500).json({ success: false, message: "Modem unreachable or timed out" });
+        res.status(500).json({ success: false, message: "Modem Auth Failed" });
     }
 });
 

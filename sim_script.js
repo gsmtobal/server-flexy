@@ -52,11 +52,14 @@ window.executeQuickUSSD = async (modemId) => {
     const sim = sims.find(s => s.modem_id === modemId);
     if (!sim || !sim.modem_ip) return;
 
-    let code = "*200*PIN#";
+    let code = "*200*PIN#"; // Default Ooredoo
+    if (sim.sim_type === 'Mobilis') code = "*632*01*PIN#";
+    else if (sim.sim_type === 'Djezzy') code = "*710#";
+
     if (sim.pin) code = code.replace('PIN', sim.pin);
     else code = code.replace('PIN', '0000');
 
-    console.log(`[Tobal Gsm] FIRM ORDER: Sending USSD [${code}] to local server...`);
+    console.log(`[Tobal Gsm] FIRM ORDER: Sending USSD [${code}] for ${sim.sim_type} to local server...`);
 
     try {
         const response = await fetch(`http://localhost:3000/api/send-ussd`, {
@@ -103,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Seed data with the real Ooredoo modem found
     if (getData(SIMS_KEY).length === 0) {
         setData(SIMS_KEY, [
-            { id: 'sim_real_01', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' }
+            { id: 'sim_real_01', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' },
+            { id: 'sim_real_02', station: 'Office', modem_id: 'Mobilis_Huawei', modem_ip: '192.168.8.1', sim_type: 'Mobilis', number: '06XXXXXXXX', label: 'شريحة موبيليس', priority: 1, balance: 0, signal: 4, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' }
         ]);
     }
 

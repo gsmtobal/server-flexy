@@ -67,13 +67,26 @@ window.executeQuickUSSD = async (modemId) => {
         });
         
         const result = await response.json();
-        if (result.success) {
-            alert(`✅ تم إرسال الطلب بنجاح! تحقق من الشاشة السوداء.`);
+        if (result.success && result.content) {
+            // Try to extract balance (e.g. 120.00 DA or 120 دج)
+            const balanceMatch = result.content.match(/(\d+(\.\d+)?)\s*(DA|دج)/i);
+            let balanceFound = null;
+            
+            if (balanceMatch) {
+                balanceFound = parseFloat(balanceMatch[1]);
+                sim.balance = balanceFound;
+                setData(SIMS_KEY, sims);
+                window.renderModems();
+            }
+
+            alert(`✅ رد الشبكة:\n\n${result.content}${balanceFound !== null ? '\n\n💰 تم تحديث الرصيد تلقائياً!' : ''}`);
+        } else if (result.success) {
+            alert(`✅ تم الإرسال بنجاح، لكن لم يصل رد من الشبكة في الوقت المحدد.`);
         } else {
             alert(`❌ السيرفر استلم الطلب لكن المودم رفض: ${result.message}`);
         }
     } catch (error) {
-        alert(`❌ الطلب لم يصل للسيرفر أصلاً!\n\nالسبب: المتصفح يمنع الاتصال من GitHub بالسيرفر المحلي.\nالحل: افتح ملف sim_dashboard.html من جهازك مباشرة.`);
+        alert(`❌ الطلب لم يصل للسيرفر!\n\nالحل: افتح ملف sim_dashboard.html من جهازك مباشرة (Local File).`);
     }
 };
 

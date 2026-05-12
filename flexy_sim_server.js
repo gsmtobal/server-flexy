@@ -91,6 +91,9 @@ app.get('/api/sync-hilink/:ip', async (req, res) => {
     }
 });
 
+// Helper for delay
+const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
 // 2. Execute USSD via HiLink (New)
 app.post('/api/send-ussd', async (req, res) => {
     const { ip, code } = req.body;
@@ -121,7 +124,36 @@ Code: ${code}
         });
 
         console.log(`[SIM Server] USSD Command Sent Successfully! ✅`);
-        res.json({ success: true, message: "USSD Sent" });
+        
+        // Step 3: Poll for Response
+        let ussdResponse = null;
+        console.log(`[SIM Server] Waiting for USSD response from modem...`);
+        
+        for (let i = 0; i < 5; i++) {
+            await sleep(1500); // Wait 1.5s between polls
+            const getResp = await axios.get(`http://${ip}/api/ussd/get`, {
+                headers: {
+                    'Cookie': sessionId,
+                    '__RequestVerificationToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const content = getXmlVal(getResp.data, 'content');
+            if (content && content.length > 0) {
+                ussdResponse = content;
+                break;
+            }
+            console.log(`[SIM Server] Polling... (Attempt ${i+1}/5)`);
+        }
+
+        if (ussdResponse) {
+            console.log(`[SIM Server] USSD Response Received: ${ussdResponse}`);
+            res.json({ success: true, message: "USSD Response Received", content: ussdResponse });
+        } else {
+            console.log(`[SIM Server] USSD Timeout (No response from network).`);
+            res.json({ success: true, message: "USSD Sent (Timeout waiting for response)", content: null });
+        }
 
     } catch (error) {
         console.error(`[SIM Server] USSD Error: ${error.message}`);

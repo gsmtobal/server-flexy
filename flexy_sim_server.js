@@ -112,7 +112,7 @@ Code: ${code}
         const token = getXmlVal(sesTokResp.data, 'TokInfo');
 
         // Step 2: Send USSD Command
-        const ussdXml = `<?xml version="1.0" encoding="UTF-8"?><request><content>${code}</content><codeType>CodeType</codeType><timeout></timeout></request>`;
+        const ussdXml = `<?xml version="1.0" encoding="UTF-8"?><request><content>${code}</content><codeType>CodeType</codeType><type>1</type><timeout></timeout></request>`;
         
         await axios.post(`http://${ip}/api/ussd/send`, ussdXml, {
             headers: {
@@ -127,31 +127,45 @@ Code: ${code}
         
         // Step 3: Poll for Response
         let ussdResponse = null;
-        console.log(`[SIM Server] Waiting for USSD response from modem...`);
+        console.log(`[SIM Server] Waiting for USSD response from modem (max 15s)...`);
         
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
             await sleep(1500); // Wait 1.5s between polls
-            const getResp = await axios.get(`http://${ip}/api/ussd/get`, {
-                headers: {
-                    'Cookie': sessionId,
-                    '__RequestVerificationToken': token,
-                    'X-Requested-With': 'XMLHttpRequest'
+            try {
+                const getResp = await axios.get(`http://${ip}/api/ussd/get`, {
+                    headers: {
+                        'Cookie': sessionId,
+                        '__RequestVerificationToken': token,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const rawXml = getResp.data;
+                const content = getXmlVal(rawXml, 'content');
+                const status = getXmlVal(rawXml, 'UnfinishUssdStatus'); 
+                
+                console.log(`[SIM Server] Poll ${i+1}/10 - XML: ${rawXml.replace(/[\n\r]/g, '')}`);
+                
+                if (content && content.length > 0) {
+                    ussdResponse = content;
+                    break;
                 }
-            });
-            
-            const content = getXmlVal(getResp.data, 'content');
-            if (content && content.length > 0) {
-                ussdResponse = content;
-                break;
+                
+                if (status === '0' && !content) {
+                    console.log(`[SIM Server] Modem reported finished (Status 0) but no content found.`);
+                    break; 
+                }
+
+            } catch (err) {
+                console.log(`[SIM Server] Poll Error: ${err.message}`);
             }
-            console.log(`[SIM Server] Polling... (Attempt ${i+1}/5)`);
         }
 
         if (ussdResponse) {
             console.log(`[SIM Server] USSD Response Received: ${ussdResponse}`);
             res.json({ success: true, message: "USSD Response Received", content: ussdResponse });
         } else {
-            console.log(`[SIM Server] USSD Timeout (No response from network).`);
+            console.log(`[SIM Server] USSD Timeout (No response from network after 15s).`);
             res.json({ success: true, message: "USSD Sent (Timeout waiting for response)", content: null });
         }
 

@@ -106,8 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Seed data with the real Ooredoo modem found
     if (getData(SIMS_KEY).length === 0) {
         setData(SIMS_KEY, [
-            { id: 'sim_real_01', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' },
-            { id: 'sim_real_02', station: 'Office', modem_id: 'Mobilis_Huawei', modem_ip: '192.168.8.1', sim_type: 'Mobilis', number: '06XXXXXXXX', label: 'شريحة موبيليس', priority: 1, balance: 0, signal: 4, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' }
+            { id: 'sim_real_01', station: 'Main', modem_id: 'Huawei_Primary', modem_ip: '192.168.1.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم الرئيسي', priority: 1, balance: 0, signal: 5, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' },
+            { id: 'sim_real_02', station: 'Home', modem_id: 'Ooredoo_Huawei', modem_ip: '192.168.50.1', sim_type: 'Ooredoo', number: '05XXXXXXXX', label: 'المودم المنزلي', priority: 1, balance: 0, signal: 3, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' },
+            { id: 'sim_real_03', station: 'Office', modem_id: 'Mobilis_Huawei', modem_ip: '192.168.8.1', sim_type: 'Mobilis', number: '06XXXXXXXX', label: 'شريحة موبيليس', priority: 1, balance: 0, signal: 4, status: 'online', min_balance: 50, max_req: 100, auto_recharge: true, pin: '0000' }
         ]);
     }
 
